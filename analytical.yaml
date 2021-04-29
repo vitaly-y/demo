@@ -1,0 +1,151 @@
+openapi: 3.0.1
+info:
+  version: '1.0'
+  title: Swagger RESTAPI Server
+  description: Documentation to integrate with the online pricing web service calls
+  contact:
+    email: support@earnix.com
+paths:
+  '/online/v2/rule/{ruleid}/schema':
+    post:
+      tags:
+        - Online
+      description: Returns a schema description for an online call to a specific pricing rule.
+      operationId: schemaDefinition_1
+      parameters:
+        - name: ruleid
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: encounter
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SnapshotsDeletionRequestDTO'
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnapshotsDeletionRequestDTO'
+      deprecated: true
+  /earnix/about:
+    get:
+      tags:
+        - General
+      parameters:
+        - in: header
+          name: X-Request-ID
+          schema:
+            type: string
+            format: uuid
+          required: true
+      description: Get Version Information of Installed Earnix Client
+      operationId: getAboutInformation
+      responses:
+        '200':
+          description: Success. Here is your version information
+  /earnix/about/javaproperties:
+    get:
+      tags:
+        - General
+      description: Get Version Information of Installed Earnix Client. Returns the Java Version Object converted into JSON format.
+      operationId: getJavaProperties
+      responses:
+        '200':
+          description: Successful operation.
+        '401':
+          description: not authorized
+  /earnix/pricingExecution/snapshots/batchDelete:
+    post:
+      tags:
+        - Snapshots
+        - PythonPrivate
+      description: Delete batch of snapshots
+      operationId: deleteSnapshots
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SnapshotsDeletionRequestDTO'
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BatchResponseDTO'
+        '401':
+          description: not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '403':
+          description: 'Forbidden. For example: License expired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '405':
+          description: 'Operation failed: Invalid parameters. For example: Filter with two criteria that are mutually exclusive'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+      security:
+        - appKeyScheme: []
+        - tokenAuthScheme: []
+components:
+  schemas:
+    BatchResponseDTO:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          format: int32
+        id:
+          type: integer
+          format: int32
+        error:
+          $ref: '#/components/schemas/ErrorDTO'
+    SnapshotsDeletionRequestDTO:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+            format: int32
+    ErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        errorId:
+          type: string
+          enum:
+            - GENERAL_ERROR
+            - INSUFFICIENT_LICENSE
+            - INVALID_AUTHORIZATION_KEY
+            - WARNING
+  securitySchemes:
+    appKeyScheme:
+      type: apiKey
+      name: service_key
+      in: header
+    tokenAuthScheme:
+      type: apiKey
+      name: auth_token
+      in: header
